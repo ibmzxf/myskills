@@ -4,59 +4,51 @@
 
 ## Skills 列表
 
+| Skill | 说明 | 用法 |
+|-------|------|------|
+| [organize-invoices](./organize-invoices/) | 发票自动整理、识别、重命名、统计 | `/organize-invoices` |
+| [pdf2md](./pdf2md/) | PDF转Markdown，支持图片型PDF | `/pdf2md <文件或目录>` |
+
+## 安装
+
+将需要的 skill 目录复制到 `~/.claude/skills/` 下即可：
+
+```bash
+# 克隆仓库
+git clone https://github.com/ibmzxf/myskills.git
+
+# 安装单个skill（以pdf2md为例）
+cp -r myskills/pdf2md ~/.claude/skills/
+
+# 或全部安装
+cp -r myskills/pdf2md ~/.claude/skills/
+cp -r myskills/organize-invoices ~/.claude/skills/
+```
+
+安装后在 Claude Code 中输入 `/` 即可看到对应的 skill。
+
+---
+
 ### organize-invoices - 发票整理助手
 
 自动整理发票文件，识别类型、提取价格、重命名并生成统计。
 
-**使用方法**：
-```bash
-# 方法1：在Claude Code中使用skill命令
-/organize-invoices
-
-# 方法2：直接对话
-"帮我整理发票"
-"整理一下这个文件夹的发票"
-```
+**用法**：`/organize-invoices`
 
 **功能**：
 - 识别类型：餐饮、打车、火车、机票、住宿
 - 提取价格：自动从发票内容提取金额
-- 重命名：类型_价格.pdf 格式
+- 重命名：`类型_价格.pdf` 格式
 - 去重：自动跳过重复发票
-- 统计：生成详细的汇总报告
+- 统计：生成 `发票统计汇总_YYYYMMDD.xlsx`
 
 **支持格式**：PDF、OFD、ZIP
 
-**输出**：
-- `整理后的发票_YYYYMMDD/` 文件夹（带日期）
-- `发票统计汇总_YYYYMMDD.xlsx` Excel统计报告（带日期，保存在整理文件夹的上一层）
+**依赖**：`pip3 install PyPDF2 pdfplumber openpyxl --user`
 
-## 技术实现
-
-脚本模板位于：`~/.claude/skills/process_invoices_template.py`
-
-包含完整的发票处理逻辑：
-- PDF/OFD文本提取
-- 智能类型识别
-- 价格提取算法
-- 去重和统计
-
-## 依赖
-
-需要安装以下Python库：
-```bash
-pip3 install PyPDF2 pdfplumber openpyxl --user
-```
-
-## 注意事项
-
-- 原始文件不会被修改或删除
-- 如果价格提取失败，文件名会标记为"未知金额"
-- OFD文件会被转换为PDF格式保存
-- 所有价格统一按照"价税合计"（含税总额）统计
-- Excel统计文件包含格式化的表格，便于查看和分析
-- 文件夹和Excel文件名都包含日期（YYYYMMDD格式），便于归档管理
-- Excel文件保存在整理文件夹的上一层，方便查看和管理
+**文件**：
+- `SKILL.md` - Skill 定义
+- `process_invoices_template.py` - 发票处理脚本模板
 
 ---
 
@@ -64,15 +56,11 @@ pip3 install PyPDF2 pdfplumber openpyxl --user
 
 将PDF文件转换为干净的Markdown文档。支持图片型PDF，自动去除水印和广告，保留原文格式。
 
-**使用方法**：
+**用法**：
 ```bash
-# 在Claude Code中使用skill命令
-/pdf2md /path/to/文件.pdf
-/pdf2md /path/to/pdf目录
-/pdf2md /path/to/pdf目录 /path/to/输出目录
-
-# 也可以用shell脚本批量处理
-./pdf2md/pdf2md_claude.sh /path/to/pdf目录
+/pdf2md /path/to/文件.pdf              # 单文件
+/pdf2md /path/to/pdf目录               # 整个目录
+/pdf2md /path/to/pdf目录 /path/to/输出  # 指定输出目录
 ```
 
 **功能**：
@@ -83,4 +71,8 @@ pip3 install PyPDF2 pdfplumber openpyxl --user
 - 支持单文件和目录批量处理
 - 已处理文件自动跳过
 
-**安装**：将 `pdf2md/` 目录复制到 `~/.claude/skills/` 下即可。
+**依赖**：仅需 Claude Code CLI
+
+**文件**：
+- `SKILL.md` - Skill 定义
+- `pdf2md_claude.sh` - 批量处理 Shell 脚本
