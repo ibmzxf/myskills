@@ -1,6 +1,8 @@
-# Claude Code Skills - 发票整理助手
+# Claude Code Skills
 
-## 已安装的Skills
+我的自定义 Claude Code Skills 合集。
+
+## Skills 列表
 
 ### organize-invoices - 发票整理助手
 
@@ -55,3 +57,30 @@ pip3 install PyPDF2 pdfplumber openpyxl --user
 - Excel统计文件包含格式化的表格，便于查看和分析
 - 文件夹和Excel文件名都包含日期（YYYYMMDD格式），便于归档管理
 - Excel文件保存在整理文件夹的上一层，方便查看和管理
+
+---
+
+### pdf2md - PDF转Markdown
+
+将PDF文件转换为干净的Markdown文档。支持图片型PDF，自动去除水印和广告，保留原文格式。
+
+**使用方法**：
+```bash
+# 在Claude Code中使用skill命令
+/pdf2md /path/to/文件.pdf
+/pdf2md /path/to/pdf目录
+/pdf2md /path/to/pdf目录 /path/to/输出目录
+
+# 也可以用shell脚本批量处理
+./pdf2md/pdf2md_claude.sh /path/to/pdf目录
+```
+
+**功能**：
+- 自动识别图片型/文字型PDF
+- 逐页精准转录（利用Claude视觉能力）
+- 自动去除水印和广告
+- 保留原文加粗/强调格式
+- 支持单文件和目录批量处理
+- 已处理文件自动跳过
+
+**安装**：将 `pdf2md/` 目录复制到 `~/.claude/skills/` 下即可。
