@@ -1,5 +1,5 @@
 #!/bin/bash
-# PDF转Markdown自动化脚本 - 使用Claude Code直接处理
+# PDF转Markdown自动化脚本 - PaddleOCR预提取 + Claude格式化
 # 用法:
 #   处理单个文件: ./pdf2md_claude.sh /path/to/file.pdf [输出目录]
 #   处理整个目录: ./pdf2md_claude.sh /path/to/pdf/dir [输出目录]
@@ -7,6 +7,8 @@
 set +e  # 不因单个文件失败而中断
 
 INPUT="${1:?用法: $0 <PDF文件或目录> [输出目录]}"
+SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
+OCR_SCRIPT="$SKILL_DIR/pdf2md_ocr.py"
 
 total=0
 done_count=0
@@ -29,21 +31,33 @@ process_pdf() {
 
     echo "[$total] 处理中: $name"
 
-    claude -p "你是一个PDF转录工具。请完成以下任务：
+    # 用 PaddleOCR 提取文本
+    local ocr_tmp
+    ocr_tmp=$(mktemp /tmp/pdf2md_ocr_XXXXXX.md)
 
-1. 用Read工具读取PDF文件: $pdf （如果页数多，分批读取，每次不超过20页）
-2. 将PDF中的正文内容转录为markdown
-3. 用Write工具将结果写入: $out_file
+    if ! python3 "$OCR_SCRIPT" "$pdf" "$ocr_tmp" 2>/dev/null || [ ! -s "$ocr_tmp" ]; then
+        echo "  -> OCR 失败！请安装 PaddleOCR: pip install 'paddleocr[doc-parser]'"
+        rm -f "$ocr_tmp"
+        return
+    fi
 
-转录要求：
-- 第一行用 # 标题（从PDF中提取文章标题，去掉"付费文"等标记）
+    echo "  -> OCR 提取成功，Claude 格式化..."
+    claude -p "你是 Markdown 格式化工具。
+1. 用 Read 工具读取 OCR 提取的原始文本: $ocr_tmp
+2. 整理成干净的 Markdown 格式
+3. 用 Write 工具将结果写入: $out_file
+
+格式要求：
+- 第一行 # 标题（提取文章标题，去掉"付费文"等标记）
 - 第二行写作者和日期信息
 - 段落之间用空行分隔
-- 加粗/红色文字用 **加粗** 标记
-- 忽略所有水印文字（明公读书会、2819817355、knn5318、knn6475、进群加薇/微等）
-- 忽略末尾的VIP广告、评论区、文章链接列表等非正文内容
+- 加粗/强调文字用 **加粗** 标记
+- 忽略所有水印（明公读书会、2819817355、knn5318、knn6475、进群加薇/微等）
+- 忽略末尾的 VIP 广告、评论区、文章链接列表等非正文内容
 - 逐字逐句准确转录，不要遗漏或改动原文
-- 不要输出任何说明文字，只执行任务" --dangerously-skip-permissions > /dev/null 2>&1
+- 只输出 Markdown 内容，不要任何说明文字" --dangerously-skip-permissions > /dev/null 2>&1
+
+    rm -f "$ocr_tmp"
 
     if [ -f "$out_file" ] && [ $(wc -c < "$out_file") -gt 1024 ]; then
         local size=$(wc -c < "$out_file")

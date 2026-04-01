@@ -1,9 +1,9 @@
 ---
 name: pdf2md
-description: 将PDF文件转换为干净的Markdown文档。支持图片型PDF，自动去除水印和广告，保留原文格式。
+description: 将PDF文件转换为干净的Markdown文档。支持图片型PDF，自动去除水印和广告，保留原文格式。PaddleOCR预提取+Claude格式化，批量处理速度大幅提升。
 argument-hint: "[PDF文件或目录路径] [输出目录(可选)]"
 disable-model-invocation: true
-allowed-tools: Read, Write, Bash(mkdir *), Bash(ls *), Bash(wc *), Bash(find *), Glob
+allowed-tools: Read, Write, Bash(mkdir *), Bash(ls *), Bash(wc *), Bash(find *), Bash(python3 *), Glob
 ---
 
 # PDF 转 Markdown 技能
@@ -19,9 +19,17 @@ allowed-tools: Read, Write, Bash(mkdir *), Bash(ls *), Bash(wc *), Bash(find *),
 
 ### 单文件模式
 如果输入是一个 `.pdf` 文件：
-1. 用 Read 工具读取PDF全部页面（如果页数多，分批读取，每次不超过20页）
-2. 将正文内容转录为Markdown格式
-3. 用 Write 工具写入输出目录
+
+**第一步：PaddleOCR 提取文本**
+```bash
+python3 ~/.claude/skills/pdf2md/pdf2md_ocr.py <pdf_path> /tmp/ocr_out.md
+```
+- 若失败（未安装 PaddleOCR）：报错提示安装，终止处理
+
+**第二步：格式化并写入**
+- 用 Read 工具读取 `/tmp/ocr_out.md`
+- 将内容按转录要求整理成 Markdown
+- 用 Write 工具写入输出目录
 
 ### 目录模式
 如果输入是一个目录：
@@ -67,6 +75,8 @@ allowed-tools: Read, Write, Bash(mkdir *), Bash(ls *), Bash(wc *), Bash(find *),
 
 ## 注意事项
 
-- 如果PDF是图片型（没有可提取的文字层），Read工具可以直接看到图片内容并识别文字
-- 对于页数很多的PDF（超过20页），必须分批读取，每批不超过20页
+- **PaddleOCR 安装**：
+  ```bash
+  pip install 'paddleocr[doc-parser]'
+  ```
 - 处理完成后报告：文件名、大小、是否成功
